@@ -72,5 +72,4 @@ knitr::include_graphics('qr-code.png')
 
 ## Un film d'horreur bientôt au cinéma
 
-<iframe width="300" height="150" src="https://youtu.be/s3JldKoA0zw"
-        title="YouTube video player" frameborder="0" allowfullscreen></iframe>
+https://youtu.be/s3JldKoA0zw
