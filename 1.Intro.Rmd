@@ -1,0 +1,76 @@
+---
+title: "Les bases"
+author: "Yacine B."
+date: "2025-09-19"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Qu'est-ce que R Markdown ?
+
+- Un type de document (.Rmd) lisible et exécutable dans RStudio pour produire une variété de documents dynamiques.
+- R Markdown peut combiner du code, du texte, des équations, des images et des résultats dans un seul document.
+  => Le produit final s'adapte au contenu.
+- Permet de générer automatiquement des rapports/manuscrits (HTML, PDF ou Word) ou des présentations (ex. celle-ci).
+- Utilise _principalement_ la syntaxe **Markdown** pour la mise en forme, mais permet d'en intégrer d'autres (ex. Latex, HTML).
+- **Qu'est-ce que _Markdown_ (sans le R)?** => Un langage de balisage léger pour structurer et styliser du texte à l’aide de symboles et codes simples. Léger et transportable.
+- Intégré dans RStudio depuis 2013.
+
+## Nombre de cafés nécessaires pour survivre à cette séance 
+
+$$
+C = t + t \cdot B 
+$$
+
+Où :  
+- `C` : nombre de cafés nécessaires pour survivre à la séance  
+- `t` : temps passé en classe  
+- `B` : nombre de mauvaises blagues de Yacine...  
+
+## Nombre estimé
+
+$$
+C = 0.5 t + t \cdot 1.25B
+$$
+
+```{r est-graph, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center', fig.cap="Nombre de cafés nécessaires pour survivre à la séance"}
+library(dplyr)
+library(ggplot2)
+
+# Data
+t <- seq(0, 1.5, by = 0.1)
+B <- c(0, 2, 4)
+
+df <- expand.grid(t = t, B = B) %>%
+  mutate(C = 0.7*t + t*B * 0.7)
+
+# Plot
+ggplot(df, aes(x = t, y = C, color = factor(B))) +
+  geom_line(linewidth = 0.7) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(
+    x = "Temps passé en classe (heures)",
+    y = "Nombre de cafés nécessaires",
+    color = "Nombre de mauvaises blagues"
+  ) + 
+  theme_bw() + 
+  theme(legend.position = "bottom") 
+```
+
+## Pour télécharger les fichiers de code (.Rmd) utilisés aujourd'hui
+
+https://github.com/BoujYac/RMarkdown_GESS
+
+
+```{r logo, out.width='40%', fig.align='center'}
+knitr::include_graphics('qr-code.png')
+```
+
+
+## Un film d'horreur bientôt au cinéma
+
+<iframe width="300" height="150" src="https://youtu.be/s3JldKoA0zw"
+        title="YouTube video player" frameborder="0" allowfullscreen></iframe>

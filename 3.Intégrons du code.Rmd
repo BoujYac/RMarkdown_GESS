@@ -1,0 +1,217 @@
+---
+title: "Intégrons du code"
+author: "Yacine B."
+date: "2025-09-19"
+output: html_document
+bibliography: "Ref_atelier_RMark.bib"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Comment intégrer du code?
+
+Vous pouvez intégrer du code R dans un document R Markdown en utilisant des blocs de code, qui sont délimités par trois accents graves `(```)` suivis de `{r}` au début et de trois accents graves à la fin.
+
+Vous pouvez aussi insérer un bloc en cliquant sur le bouton vert (+c) dans la barre d'outils de l'éditeur R Markdown.
+
+Le plus simple est d'utiliser le raccourci clavier `Ctrl + Alt + I` (ou `Cmd + Option + I` sur Mac) pour insérer un bloc de code.
+
+```{r exemple-1}
+2+2
+```
+
+Tout ce qui se trouve à l'intérieur du bloc de code sera interprété comme du code R lorsque vous "tricotez" le document. Le contenu réagit exactement comme un script R classique.
+
+Plusieurs options sont disponibles pour personnaliser le comportement des blocs de code. Par exemple, vous pouvez choisir d'afficher ou non le code source dans le document final en utilisant l'option `echo`. Voici un exemple où le code est exécuté mais n'est pas affiché dans le document final:
+
+```{r exemple-2, echo=FALSE}
+2*2
+```
+Vous pouvez aussi utiliser l'option  `include`, mais qui excluera cette fois-ci tant votre code que son résultat. Dans le deux cas, **le bloc de code sera roulé par R**.
+
+```{r exemple-2b, include=FALSE}
+2*2
+```
+
+La structure des blocs de code est la suivante:
+` ```{language nom_du_bloc, option1=xxx, option2=xxx, etc...} `
+
+C'est généralement une bonne pratique de nommer vos blocs. Deux blocs ne peuvent pas avoir le même nom.
+
+Vous pouvez intégrer du code au sein de votre texte aussi. C'est particulièrement pratique pour automatiquement présenter des résultats dans le texte et éviter les copier-coller. Par exemple :
+
+```{r exemple-3}
+x <- 30
+y <- 70
+```
+
+Il y a `r x` x et `r y` y, donc il y a `r x/(x+y)*100`% de x.
+
+Ou encore on peut faire des opérations plus complexes:
+Le groupe le plus nombreux est le groupe `r ifelse(x>y, "x", "y")` avec `r max(x,y)` individus.
+
+## Intégrer des figures
+
+Les figures sont très faciles à intégrer dans le document. Voici un exemple de génération d'un graphique simple avec ggplot2:
+
+```{r exemple-fig, echo=FALSE}
+## Installer si nécessaire
+#install.packages(c("ggplot2", "viridis"))
+library(ggplot2)
+library(viridis)
+set.seed(42)
+
+# Générons aléatoirement des données
+n <- 100
+df <- data.frame(
+  x = rnorm(n, mean = 50, sd = 10),
+  y = rnorm(n, mean = 30, sd = 5),
+  group = sample(LETTERS[1:3], n, replace = TRUE)
+)
+
+# Produire un nuage de points avec ggplot2
+fig <- ggplot(df, aes(x = x, y = y, color = group)) +
+    geom_point(size = 3, alpha = 0.7) +
+    scale_color_viridis_d(option = "D") +
+    theme_bw() +
+    theme(legend.position = "bottom") +
+    labs(
+      x = "X",
+      y = "Y",
+      color = "Groupe"
+    ) 
+
+fig
+
+```
+
+
+Mais on peut affiner le tout. Par exemple, le chargement de packages amène des messages d'avertissement qui peuvent être indésirables dans le document final. On peut les supprimer avec l'option `message=FALSE`.
+
+Aussi, on peut ajuster la taille de la figure avec les options `fig.width` et `fig.height` (en pouces). On peut également ajuster la taille globale avec l'option `out.width` (en pourcentage de la largeur de la page).
+
+Pour aligner la figure, il y a l'option `fig.align` prenant les arguments `"left"`, `"right"`, ou `"center"`. 
+
+`fig.caption` permet d'ajouter un titre à la figure.
+
+```{r exemple-fig2, echo=FALSE, message=FALSE, warning = FALSE, out.width='50%', fig.align='center', fig.cap = "Un exemple de figure alignée de bonne taille et avec un titre"}
+fig
+```
+
+Il y a aussi toujours l'option de sauvegarder le résultat en image dans le dossier de travail, puis d'importer celle-ci avec les approches vues précédemment.
+
+
+## Intégrer des tableaux
+
+Pour intégrer des tableaux dans un document R Markdown, vous pouvez utiliser plusieurs méthodes en fonction de vos besoins. En voici quelques-unes.
+
+### 1. L'approche native de Markdown
+
+Markdown permet de créer des tableaux simples en utilisant des barres horizontales (`|`) et des tirets (`-`). Voici un exemple de tableau simple présentant la moyenne par groupe des données aléatoires précédemment générées:
+
+```{r moyennes, echo=FALSE}
+moya <- mean(df$y[df$group == "A"])
+moyb <- mean(df$y[df$group == "B"])
+moyc <- mean(df$y[df$group == "C"])
+```
+
+| Groupe | Moyenne de Y |
+|--------|:------------:|
+| A      | `r round(moya, 2)` |
+| B      | `r round(moyb, 2)` |
+| C      | `r round(moyc, 2)` |
+
+Pas idéal. Plus difficile à personnaliser et demande un plus gros effort initial. Il est préférable d'utiliser des approches qui génèrent automatiquement un tableau avec la bonne structure de cellules. Par exemple, si dans une nouvelle version des données, un groupe D était ajouté, il faudrait réécrire cette portion du document.
+
+### 2. L'approche recommandée: Utiliser la fonction `knitr::kable()`
+
+La fonction `kable()` est une manière simple et efficace de créer des tableaux bien formatés. Voici un exemple:
+
+```{r exemple-tableau-1, echo=FALSE, message=FALSE, warning = FALSE, tab.cap="Tableau avec la bonne approche kable()"}
+#install.packages("kableExtra")
+library(kableExtra, quietly = TRUE)
+library(dplyr)
+
+# Création du tableau récapitulatif
+table_moyennes <- df %>%
+  group_by(group) %>%
+  summarize(Moyenne_Y = round(mean(y), 2))
+
+# Affichage du tableau avec kable
+table_moyennes <- df %>%
+  group_by(group) %>%
+  summarize(Moyenne_Y = round(mean(y), 2))
+
+kable(table_moyennes, col.names = c("Groupe", "Moyenne de Y"),
+      caption = "Exemple de tableau: Moyennes par groupe") %>%
+  kable_styling(full_width = FALSE, position = "center", font_size = 12, bootstrap_options = c("striped"))
+```
+
+
+## Références et citations 
+
+### Références croisées (cross-references)
+
+Les options de sortie par défaut de R Markdown ne permettent pas d'aisément gérer les références croisées (figures, tableaux, sections, etc.). Pour cela, il faut utiliser le package `bookdown`.
+
+C'est un package qui a initialement été conçu pour la rédaction de livres, mais qui offre des fonctionnalités très utiles pour la production de tous types de documents.
+
+Si on change l'output dans notre YAML à :
+
+```
+output: 
+  bookdown::pdf_document2
+```
+
+On pourrait alors utiliser les références croisées. Par exemple, pour référencer une figure, on utiliserait la syntaxe `\ref(fig:exemple-fig2)`.
+
+La Figure \ref{fig:exemple-fig2} représente un nuage de points.
+
+
+### Citations bibliographiques
+
+Pour gérer les références bibliographiques dans R Markdown, vous pouvez utiliser un fichier BibTeX (.bib) importé de _Zotero_ ou autre logiciel bibliographique de votre choix, pour stocker vos références dans le dossier qui contient votre `.Rmd`.
+
+Ensuite, dans le bloc YAML au début de votre document R Markdown, vous devez spécifier le nom de votre fichier `.bib` et choisir un style de citation au besoin. 
+
+On ajoute ceci au bloc YAML
+
+```
+bibliography: "xxx.bib"
+```
+Par exemple :
+
+- Et on cite à partir des clés de citation 1ui suivent généralement la structure suivante: Nom premier auteur, trois premiers mots du titre, année).
+
+- Voici encore de la littérature sur R Markdown [@xieMarkdownCookbook2018; @xieBookdownAuthoringBooks2016; @xieMarkdownDefinitiveGuide2023; @baumerMarkdown2015]
+
+Sinon les livres de @apparicioMethodesQuantitativesSciences2024 et @wickhamDataScienceImport2023 sont des manuels plus généraux sur le langage R pour l'analyse de données.
+
+
+## Pour aller plus loin
+
+### Consulter des exemples de tout ce qui peut être produit avec Markdown
+
+https://rmarkdown.rstudio.com/gallery.html
+
+### Bookdown
+
+Pour plus de fonctionnalités et de contrôle. Pour rédiger des livres, thèses, mémoires.
+https://bookdown.org/
+
+### rticles
+
+Pour utiliser des templates préfabriqués respectant les normes de mises en page de revues scientifiques et éditeurs réputés.
+
+https://github.com/rstudio/rticles
+
+### Quarto 
+
+L'héritier de R Markdown, plus puissant et flexible. Permet de plus facilement intégrer du code dans plusieurs langages (Python, Julia, etc.) et de produire des documents plus complexes. Si vous voulez vous lancer sérieusement dans l'aventure R Markdown, commencez directement là. L'essentiel des principes vus aujourd'hui s'appliquent à `Quarto`.
+
+- R Makdown = Stabilité + Simplicité
+- Quarto = Innovation + Puissance et Flexibilité
+
+## Références
